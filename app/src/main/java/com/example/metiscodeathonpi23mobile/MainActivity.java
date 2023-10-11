@@ -37,7 +37,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     class TrackedPath {
-        ArratList<Location> locationList = new ArrayList<Location>();
+        ArrayList<Location> locationList = new ArrayList<Location>();
         LocalDate localDate = LocalDate.now(); // Create a date object
         LocalTime localTime = LocalTime.now();
     }
