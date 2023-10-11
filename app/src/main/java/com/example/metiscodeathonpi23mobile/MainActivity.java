@@ -26,17 +26,8 @@ public class MainActivity extends AppCompatActivity {
 
     private Compass compass;
 
-    class TrackedPoint {
-        public double latitude;
-        public double longitude;
-        long elevation;
-    }
 
-    class TrackedPath {
-        ArrayList<TrackedPoint> locationList = new ArrayList<TrackedPoint>();
-        LocalDate localDate = LocalDate.now(); // Create a date object
-        LocalTime localTime = LocalTime.now();
-    }
+
 
     TrackedPath trackedPath = new TrackedPath();
     @Override
@@ -77,11 +68,14 @@ public class MainActivity extends AppCompatActivity {
     private final LocationListener locationListener = new LocationListener() {
         public void onLocationChanged(Location location) {
             TrackedPoint trackedPoint = new TrackedPoint();
+
             trackedPoint.longitude = location.getLongitude();
             trackedPoint.latitude = location.getLatitude();
+            trackedPoint.azimuth = compass.azimuth;
+            trackedPoint.direction = compass.direction;
 
             // TODO: create a new Location object and add it to TrackedPath.locationList
-            String text = "(" + trackedPoint.longitude + ", " + trackedPoint.latitude + ") " + compass.azimuthRads + " : " + compass.direction;
+            String text = "(" + trackedPoint.longitude + ", " + trackedPoint.latitude + ") " + compass.azimuth + " : " + compass.direction;
             trackedPath.locationList.add(trackedPoint);
             tvLocation.setText(text);
         }
