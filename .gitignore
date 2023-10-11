@@ -13,3 +13,6 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# developer specific files
+deploymentTargetDropDown.xml
