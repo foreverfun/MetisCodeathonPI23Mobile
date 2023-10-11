@@ -14,31 +14,15 @@ import java.io.File;
 import java.util.UUID;
 
 public class PictureTaker {
-
     private static final int REQUEST_IMAGE_CAPTURE = 1;
     private Activity activity;
     private PictureInfo lastPictureInfo;
-    private LocationManager locationManager;
+    private LocationTracker tracker;
     private String provider;
 
-    public PictureTaker(Activity activity, LocationManager locationManager) {
+    public PictureTaker(Activity activity, LocationTracker tracker) {
         this.activity = activity;
-        this.locationManager = locationManager;
-        initializeLocationManager();
-    }
-
-    private void initializeLocationManager() {
-        locationManager = (LocationManager) activity.getSystemService(Context.LOCATION_SERVICE);
-        // Using GPS provider. Make sure to check for permissions and provider enable status in real app
-        provider = LocationManager.GPS_PROVIDER;
-    }
-
-    private double getLatitude() {
-        return lastPictureInfo != null ? lastPictureInfo.latitude : 0.0;
-    }
-
-    private double getLongitude() {
-        return lastPictureInfo != null ? lastPictureInfo.longitude : 0.0;
+        this.tracker = tracker;
     }
 
     private File createImageFile() {
@@ -50,17 +34,18 @@ public class PictureTaker {
         }
         try {
             image.createNewFile();
-            // Record info for later retrieval
+
             lastPictureInfo = new PictureInfo();
             lastPictureInfo.guid = imageFileName;
             lastPictureInfo.picturePath = image.getAbsolutePath();
             lastPictureInfo.timeTaken = System.currentTimeMillis();
-            // Getting the location
-            Location location = locationManager.getLastKnownLocation(provider);
+
+            Location location = tracker.getLocation();
             if(location != null) {
                 lastPictureInfo.latitude = location.getLatitude();
                 lastPictureInfo.longitude = location.getLongitude();
             }
+
             return image;
         } catch (Exception ex) {
             Log.e("PictureTaker", "Error creating image file", ex);
