@@ -14,6 +14,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
 import java.util.ArrayList;
+import java.time.LocalDate;
+import java.time.LocalTime; // import the LocalTime class
+
 
 public class MainActivity extends AppCompatActivity {
     private LocationManager locationManager;
@@ -29,6 +32,19 @@ public class MainActivity extends AppCompatActivity {
 
     private Compass compass;
 
+    class TrackedPoint {
+        public double latitude;
+        public double longitude;
+        long elevation;
+    }
+
+    class TrackedPath {
+        ArrayList<TrackedPoint> locationList = new ArrayList<TrackedPoint>();
+        LocalDate localDate = LocalDate.now(); // Create a date object
+        LocalTime localTime = LocalTime.now();
+    }
+
+    TrackedPath trackedPath = new TrackedPath();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -67,12 +83,13 @@ public class MainActivity extends AppCompatActivity {
 
     private final LocationListener locationListener = new LocationListener() {
         public void onLocationChanged(Location location) {
-            double longitude = location.getLongitude();
-            double latitude = location.getLatitude();
+            TrackedPoint trackedPoint = new TrackedPoint();
+            trackedPoint.longitude = location.getLongitude();
+            trackedPoint.latitude = location.getLatitude();
 
             // TODO: create a new Location object and add it to TrackedPath.locationList
-            String text = "(" + longitude + ", " + latitude + ") " + compass.azimuthRads + " : " + compass.direction;
-            locationList.add(text);
+            String text = "(" + trackedPoint.longitude + ", " + trackedPoint.latitude + ") " + compass.azimuthRads + " : " + compass.direction;
+            trackedPath.locationList.add(trackedPoint);
             tvLocation.setText(text);
         }
     };
