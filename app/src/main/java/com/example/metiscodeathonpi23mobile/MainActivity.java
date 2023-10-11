@@ -3,20 +3,41 @@ package com.example.metiscodeathonpi23mobile;
 import android.annotation.SuppressLint;
 import android.location.Location;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-public class MainActivity extends AppCompatActivity implements LocationUpdateListener {
+public class MainActivity extends AppCompatActivity implements LocationUpdateListener, PictureTakerCallback {
     private Button btnStart;
+    private Button btnTakePicture;
     private TextView tvLocation;
     private boolean isCollecting = false;
 
     private LocationTracker tracker;
     private Compass compass;
+    private PictureTaker pictureTaker;
 
     private TrackedPath trackedPath;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        tracker = new LocationTracker(this, this);
+        compass = new Compass(this);
+        pictureTaker = new PictureTaker(this, this);
+
+        setContentView(R.layout.activity_main);
+        btnStart = findViewById(R.id.btnStart);
+        btnTakePicture = findViewById(R.id.btnTakePicture);
+        tvLocation = findViewById(R.id.tvLocation);
+
+        btnStart.setOnClickListener(view -> handleStartClick());
+
+        btnTakePicture.setOnClickListener(view -> handleTakePictureClick());
+    }
 
     public void onLocationUpdate(Location location) {
         TrackedPoint trackedPoint = new TrackedPoint();
@@ -32,22 +53,11 @@ public class MainActivity extends AppCompatActivity implements LocationUpdateLis
         tvLocation.setText(text);
     }
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        tracker = new LocationTracker(this, this);
-        compass = new Compass(this);
-
-        setContentView(R.layout.activity_main);
-        btnStart = findViewById(R.id.btnStart);
-        tvLocation = findViewById(R.id.tvLocation);
-
-        btnStart.setOnClickListener(view -> handleButtonClick());
-    }
+    public void onPictureTaken() {}
 
     @SuppressLint("SetTextI18n")
-    private void handleButtonClick() {
+    private void handleStartClick() {
+
         if (isCollecting) {
             isCollecting = false;
             btnStart.setText("Start");
@@ -60,5 +70,10 @@ public class MainActivity extends AppCompatActivity implements LocationUpdateLis
             tracker.start();
             compass.start();
         }
+    }
+
+    @SuppressLint("SetTextI18n")
+    private void handleTakePictureClick() {
+        pictureTaker.takePicture();
     }
 }
