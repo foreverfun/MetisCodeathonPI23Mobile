@@ -12,11 +12,10 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
-import java.sql.Time;
 import java.util.ArrayList;
 import java.time.LocalDate;
 import java.time.LocalTime; // import the LocalTime class
-import java.util.Date;
+
 
 public class MainActivity extends AppCompatActivity {
     private LocationManager locationManager;
@@ -30,19 +29,18 @@ public class MainActivity extends AppCompatActivity {
     //       of when it was created, and we need to be able to serialize it to JSON to send to AWS
     //private ArrayList<String> locationList;
 
-    class Location {
+    class TrackedPoint {
         public double latitude;
         public double longitude;
         long elevation;
     }
 
     class TrackedPath {
-        ArrayList<Location> locationList = new ArrayList<Location>();
+        ArrayList<TrackedPoint> locationList = new ArrayList<TrackedPoint>();
         LocalDate localDate = LocalDate.now(); // Create a date object
         LocalTime localTime = LocalTime.now();
     }
 
-    Location location = new Location();
     TrackedPath trackedPath = new TrackedPath();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,12 +76,13 @@ public class MainActivity extends AppCompatActivity {
 
     private final LocationListener locationListener = new LocationListener() {
         public void onLocationChanged(Location location) {
-            location.longitude = location.getLongitude();
-            location.latitude = location.getLatitude();
+            TrackedPoint trackedPoint = new TrackedPoint();
+            trackedPoint.longitude = location.getLongitude();
+            trackedPoint.latitude = location.getLatitude();
 
             // TODO: create a new Location object and add it to TrackedPath.locationList
-            String text = "(" + location.longitude + ", " + location.latitude + ")";
-            trackedPath.locationList.add(text);
+            String text = "(" + trackedPoint.longitude + ", " + trackedPoint.latitude + ")";
+            trackedPath.locationList.add(trackedPoint);
             tvLocation.setText(text);
         }
     };
