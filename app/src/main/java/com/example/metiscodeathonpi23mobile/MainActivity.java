@@ -24,12 +24,6 @@ public class MainActivity extends AppCompatActivity {
     private TextView tvLocation;
     private boolean isCollecting = false;
 
-    // TODO: locationList should be an ArrayList of Locations
-    //       we need a Location class for this with latitude, longitude, and sensor fields (e.g. elevation)
-    //       locationList should be in a class called TrackedPath, which would also have the date/time stamp
-    //       of when it was created, and we need to be able to serialize it to JSON to send to AWS
-    private ArrayList<String> locationList;
-
     private Compass compass;
 
     class TrackedPoint {
@@ -52,7 +46,6 @@ public class MainActivity extends AppCompatActivity {
         btnStart = findViewById(R.id.btnStart);
         tvLocation = findViewById(R.id.tvLocation);
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
-        locationList = new ArrayList<>();
         compass = new Compass(this);
 
         btnStart.setOnClickListener(view -> handleButtonClick());
