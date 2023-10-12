@@ -3,10 +3,16 @@ package com.example.metiscodeathonpi23mobile;
 import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
+
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+
+import android.Manifest;
 
 public class PictureTaker {
 
@@ -20,7 +26,29 @@ public class PictureTaker {
         this.callback = callback;
     }
 
+    private static final int REQUEST_CAMERA_PERMISSION = 123;
+
+    private boolean requestCameraPermission() {
+        if (ContextCompat.checkSelfPermission(activity, Manifest.permission.CAMERA)
+                != PackageManager.PERMISSION_GRANTED) {
+
+            ActivityCompat.requestPermissions(
+                    activity,
+                    new String[]{Manifest.permission.CAMERA},
+                    REQUEST_CAMERA_PERMISSION
+            );
+
+            return false;
+        } else {
+            return true;
+        }
+    }
+
     public void takePicture() {
+        if (!requestCameraPermission()) {
+            return;
+        }
+
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         if (takePictureIntent.resolveActivity(activity.getPackageManager()) != null) {
 
