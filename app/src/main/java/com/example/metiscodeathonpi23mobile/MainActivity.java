@@ -13,17 +13,26 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.FragmentTransaction;
 
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+
+import android.location.Location;
+import android.graphics.Color;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.PolylineOptions;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.List;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -34,6 +43,8 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class MainActivity extends AppCompatActivity implements LocationUpdateListener, PictureTakerCallback, OnMapReadyCallback {
+    private static double offsetLat = 0;
+    private static double offsetLon = 0;
     private Button btnStart;
     private Button btnTakePicture;
     private TextView tvLocation;
@@ -44,6 +55,7 @@ public class MainActivity extends AppCompatActivity implements LocationUpdateLis
     private PictureTaker pictureTaker;
 
     private TrackedPath trackedPath;
+    private Polyline polyline;
 
     private GoogleMap myMap;
 
@@ -79,8 +91,9 @@ public class MainActivity extends AppCompatActivity implements LocationUpdateLis
     }
 
     @Override
-    public void onMapReady(GoogleMap googleMap) {
+    public void onMapReady(@NonNull GoogleMap googleMap) {
         myMap = googleMap;
+        myMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
     }
 
     @Override
@@ -92,12 +105,11 @@ public class MainActivity extends AppCompatActivity implements LocationUpdateLis
     public void onLocationUpdate(Location location) {
         TrackedPoint trackedPoint = new TrackedPoint();
 
-        trackedPoint.longitude = location.getLongitude();
-        trackedPoint.latitude = location.getLatitude();
+        trackedPoint.longitude = location.getLongitude() + offsetLon;
+        trackedPoint.latitude = location.getLatitude() + offsetLat;
         trackedPoint.azimuth = compass.azimuth;
         trackedPoint.direction = compass.direction;
 
-        // TODO: create a new Location object and add it to TrackedPath.locationList
         String text = "(" + trackedPoint.longitude + ", " + trackedPoint.latitude + ") " + compass.azimuth + " : " + compass.direction;
         trackedPath.locationList.add(trackedPoint);
         tvLocation.setText(text);
@@ -105,10 +117,28 @@ public class MainActivity extends AppCompatActivity implements LocationUpdateLis
         //To track current path
         LatLng current = new LatLng(trackedPoint.latitude, trackedPoint.longitude);
         myMap.addMarker(new MarkerOptions().position(current).title(trackedPath.localTime.toString()));
+        if (trackedPath.locationList.size() > 1) {
+            TrackedPoint lastTracked = trackedPath.locationList.get(trackedPath.locationList.size() - 2);
+
+            LatLng last = new LatLng(lastTracked.latitude, lastTracked.longitude);
+            if(polyline == null) {
+                PolylineOptions polylineOptions = new PolylineOptions()
+                        .add(last, current)
+                        .width(5f)
+                        .color(Color.RED);
+                polyline = myMap.addPolyline(polylineOptions);
+            } else {
+                List<LatLng> points = polyline.getPoints();
+                points.add(current);
+                polyline.setPoints(points);
+            }
+        }
+
+        myMap.moveCamera(CameraUpdateFactory.newLatLngZoom(current, 20));
     }
 
     public void onPictureTaken(String imageUri) {
-        Log.d("MainActivity", "onPictureTaken - Image captured and saved to: " + imageUri.toString());
+        Log.d("MainActivity", "onPictureTaken - Image captured and saved to: " + imageUri);
     }
 
     @SuppressLint("SetTextI18n")
@@ -120,6 +150,8 @@ public class MainActivity extends AppCompatActivity implements LocationUpdateLis
             tracker.stop();
             compass.stop();
         } else {
+            myMap.clear();
+            polyline = null;
             trackedPath = new TrackedPath();
             isCollecting = true;
             btnStart.setText("Stop");
