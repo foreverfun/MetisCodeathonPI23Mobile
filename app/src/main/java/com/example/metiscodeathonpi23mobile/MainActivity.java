@@ -1,12 +1,14 @@
 package com.example.metiscodeathonpi23mobile;
 
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.location.Location;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.TextView;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 public class MainActivity extends AppCompatActivity implements LocationUpdateListener, PictureTakerCallback {
@@ -39,6 +41,12 @@ public class MainActivity extends AppCompatActivity implements LocationUpdateLis
         btnTakePicture.setOnClickListener(view -> handleTakePictureClick());
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        pictureTaker.onActivityResult(requestCode, resultCode, data);
+    }
+
     public void onLocationUpdate(Location location) {
         TrackedPoint trackedPoint = new TrackedPoint();
 
@@ -53,7 +61,9 @@ public class MainActivity extends AppCompatActivity implements LocationUpdateLis
         tvLocation.setText(text);
     }
 
-    public void onPictureTaken() {}
+    public void onPictureTaken(String imageUri) {
+        Log.d("MainActivity", "onPictureTaken - Image captured and saved to: " + imageUri.toString());
+    }
 
     @SuppressLint("SetTextI18n")
     private void handleStartClick() {
