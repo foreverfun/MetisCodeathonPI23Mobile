@@ -11,8 +11,11 @@ import android.widget.TextView;
 import androidx.annotation.Nullable;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.FragmentTransaction;
 
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.gson.Gson;
@@ -30,7 +33,7 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-public class MainActivity extends AppCompatActivity implements LocationUpdateListener, PictureTakerCallback {
+public class MainActivity extends AppCompatActivity implements LocationUpdateListener, PictureTakerCallback, OnMapReadyCallback {
     private Button btnStart;
     private Button btnTakePicture;
     private TextView tvLocation;
@@ -43,6 +46,7 @@ public class MainActivity extends AppCompatActivity implements LocationUpdateLis
     private TrackedPath trackedPath;
 
     private GoogleMap myMap;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -59,6 +63,24 @@ public class MainActivity extends AppCompatActivity implements LocationUpdateLis
         btnStart.setOnClickListener(view -> handleStartClick());
 
         btnTakePicture.setOnClickListener(view -> handleTakePictureClick());
+        
+        // setup the GoogleMap
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.mapView_walkedPath);
+
+        if (mapFragment == null) {
+            mapFragment = SupportMapFragment.newInstance();
+            FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
+            fragmentTransaction.replace(R.id.mapView_walkedPath, mapFragment);
+            fragmentTransaction.commit();
+        }
+
+        mapFragment.getMapAsync(this);
+    }
+
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
+        myMap = googleMap;
     }
 
     @Override
