@@ -12,6 +12,9 @@ import androidx.annotation.Nullable;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -39,6 +42,7 @@ public class MainActivity extends AppCompatActivity implements LocationUpdateLis
 
     private TrackedPath trackedPath;
 
+    private GoogleMap myMap;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -75,6 +79,10 @@ public class MainActivity extends AppCompatActivity implements LocationUpdateLis
         String text = "(" + trackedPoint.longitude + ", " + trackedPoint.latitude + ") " + compass.azimuth + " : " + compass.direction;
         trackedPath.locationList.add(trackedPoint);
         tvLocation.setText(text);
+
+        //To track current path
+        LatLng current = new LatLng(trackedPoint.latitude, trackedPoint.longitude);
+        myMap.addMarker(new MarkerOptions().position(current).title(trackedPath.localTime.toString()));
     }
 
     public void onPictureTaken(String imageUri) {
