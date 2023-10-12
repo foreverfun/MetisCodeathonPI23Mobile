@@ -13,8 +13,11 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -152,8 +155,8 @@ public class MainActivity extends AppCompatActivity implements LocationUpdateLis
                 {
                     String responseString = response.body().string();
                     Gson gson = new Gson();
-                    TrackedPath trackedPath = new TrackedPath();
-                    trackedPath = gson.fromJson(responseString, TrackedPath.class);
+                    Type listType = new TypeToken<ArrayList<TrackedPath>>(){}.getType();
+                    ArrayList<TrackedPath> trackedPaths = gson.fromJson(responseString, listType);
                     runOnUiThread(new Runnable() {
 
                         @Override
