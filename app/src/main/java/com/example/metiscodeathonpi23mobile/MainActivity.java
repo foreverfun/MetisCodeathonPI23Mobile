@@ -9,7 +9,20 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.annotation.Nullable;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.google.gson.Gson;
+
+import java.io.IOException;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.FormBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 public class MainActivity extends AppCompatActivity implements LocationUpdateListener, PictureTakerCallback {
     private Button btnStart;
@@ -85,5 +98,77 @@ public class MainActivity extends AppCompatActivity implements LocationUpdateLis
     @SuppressLint("SetTextI18n")
     private void handleTakePictureClick() {
         pictureTaker.takePicture();
+    }
+
+    private void postEndpoint(String url, TrackedPath trackedPath)
+    {
+        Gson gson = new Gson();
+        String trackedPathString = gson.toJson(trackedPath);
+        new Thread(new Runnable() {
+
+            @Override
+            public void run() {
+                RequestBody postBody = new FormBody.Builder()
+                        .add("TrackedPathString", trackedPathString)
+                        .build();
+                Request request = new Request.Builder()
+                        .url(url)
+                        .post(postBody)
+                        .build();
+                OkHttpClient client = new OkHttpClient();
+                Call call = client.newCall(request);
+
+                Response response = null;
+                try {
+                    response = call.execute();
+                    String serverResponse = response.body().string();
+                    runOnUiThread(new Runnable() {
+
+                        @Override
+                        public void run() {
+                            //display to serverResponse to UI
+                        }
+                    });
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+
+            }
+        }).start();
+    }
+
+    private void getEndpoint(String url)
+    {
+        //get
+        OkHttpClient client = new OkHttpClient();
+        Request request = new Request.Builder()
+                .url(url)
+                .build();
+        client.newCall(request).enqueue(new Callback() {
+
+            @Override
+            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                if (response.isSuccessful())
+                {
+                    String responseString = response.body().string();
+                    Gson gson = new Gson();
+                    TrackedPath trackedPath = new TrackedPath();
+                    trackedPath = gson.fromJson(responseString, TrackedPath.class);
+                    runOnUiThread(new Runnable() {
+
+                        @Override
+                        public void run() {
+                            //display trackedPath to UI component
+                        }
+                    });
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                e.printStackTrace();
+            }
+        });
+
     }
 }
