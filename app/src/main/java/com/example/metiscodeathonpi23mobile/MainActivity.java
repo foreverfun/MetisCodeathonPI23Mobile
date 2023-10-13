@@ -1,16 +1,20 @@
 package com.example.metiscodeathonpi23mobile;
 
 import android.annotation.SuppressLint;
+import android.app.Dialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.ImageDecoder;
 import android.location.Location;
 import android.os.Bundle;
+import android.util.Base64;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.Nullable;
@@ -23,6 +27,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.gson.Gson;
@@ -38,7 +43,9 @@ import com.google.android.gms.maps.model.PolylineOptions;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -48,7 +55,7 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-public class MainActivity extends AppCompatActivity implements LocationUpdateListener, PictureTakerCallback, OnMapReadyCallback {
+public class MainActivity extends AppCompatActivity implements LocationUpdateListener, PictureTakerCallback, OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
     private static double offsetLat = 0;
     private static double offsetLon = 0;
     private Button btnStart;
@@ -62,6 +69,8 @@ public class MainActivity extends AppCompatActivity implements LocationUpdateLis
 
     private TrackedPath trackedPath;
     private Polyline polyline;
+    private Map<Marker, TrackedPoint> markerTrackedPointMap;
+
 
     private GoogleMap myMap;
 
@@ -78,6 +87,7 @@ public class MainActivity extends AppCompatActivity implements LocationUpdateLis
         pictureTaker = new PictureTaker(this, this);
 
         trackedPath = new TrackedPath();
+        markerTrackedPointMap = new HashMap<>();
 
         setContentView(R.layout.activity_main);
         btnStart = findViewById(R.id.btnStart);
@@ -99,7 +109,7 @@ public class MainActivity extends AppCompatActivity implements LocationUpdateLis
         
         // setup the GoogleMap
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.mapView_walkedPath);
+            .findFragmentById(R.id.mapView_walkedPath);
 
         if (mapFragment == null) {
             mapFragment = SupportMapFragment.newInstance();
@@ -115,6 +125,7 @@ public class MainActivity extends AppCompatActivity implements LocationUpdateLis
     public void onMapReady(@NonNull GoogleMap googleMap) {
         myMap = googleMap;
         myMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
+        myMap.setOnMarkerClickListener(this);
     }
 
     @Override
@@ -125,13 +136,18 @@ public class MainActivity extends AppCompatActivity implements LocationUpdateLis
 
     private void AddTrackedPoint(TrackedPoint trackedPoint)
     {
-        String text = "(" + trackedPoint.longitude + ", " + trackedPoint.latitude + ") " + compass.azimuth + " : " + compass.direction;
+        String lonString = String.format("%.5f", trackedPoint.longitude);
+        String latString = String.format("%.5f", trackedPoint.latitude);
+        String azString = String.format("%.1f", compass.azimuth);
+        String text = compass.direction + " - " + azString + "(" + lonString + ", " + latString + ") ";
+        trackedPoint.index = trackedPath.locationList.size();
         trackedPath.locationList.add(trackedPoint);
         tvLocation.setText(text);
 
-        //To track current path
         LatLng current = new LatLng(trackedPoint.latitude, trackedPoint.longitude);
-        myMap.addMarker(new MarkerOptions().position(current).title(trackedPath.localTime.toString()));
+        Marker marker = myMap.addMarker(new MarkerOptions().position(current).title(trackedPath.localTime.toString()));
+        markerTrackedPointMap.put(marker, trackedPoint);
+
         if (trackedPath.locationList.size() > 1) {
             TrackedPoint lastTracked = trackedPath.locationList.get(trackedPath.locationList.size() - 2);
 
@@ -195,6 +211,7 @@ public class MainActivity extends AppCompatActivity implements LocationUpdateLis
             myMap.clear();
             polyline = null;
             trackedPath = new TrackedPath();
+            markerTrackedPointMap = new HashMap<>();
             isCollecting = true;
             btnStart.setText("Stop");
             tracker.start();
@@ -205,6 +222,31 @@ public class MainActivity extends AppCompatActivity implements LocationUpdateLis
     @SuppressLint("SetTextI18n")
     private void handleTakePictureClick() {
         pictureTaker.takePicture();
+    }
+    @Override
+    public boolean onMarkerClick(Marker marker) {
+        TrackedPoint trackedPoint = markerTrackedPointMap.get(marker);
+        if (trackedPoint != null) {
+            Dialog dialog = new Dialog(this);
+            dialog.setContentView(R.layout.marker_dialog);
+
+            TextView markerIndexTextView = dialog.findViewById(R.id.markerIndexTextView);
+            TextView azimuthDirectionTextView = dialog.findViewById(R.id.azimuthDirectionTextView);
+
+            markerIndexTextView.setText("Marker: " + trackedPoint.index);
+            String azimuthDirectionInfo = String.format("Direction: %s (%.5f)", trackedPoint.direction, trackedPoint.azimuth);
+            azimuthDirectionTextView.setText(azimuthDirectionInfo);
+
+            if (trackedPoint.base64Image != null) {
+                byte[] decodedString = Base64.decode(trackedPoint.base64Image, Base64.DEFAULT);
+                Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+                ImageView imageView = dialog.findViewById(R.id.imageView);
+                imageView.setImageBitmap(decodedByte);
+            }
+
+            dialog.show();
+        }
+        return false;
     }
 
     @SuppressLint("SetTextI18n")

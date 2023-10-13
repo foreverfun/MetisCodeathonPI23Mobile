@@ -16,11 +16,10 @@ import androidx.core.content.ContextCompat;
 
 import android.Manifest;
 
-import java.io.IOException;
-
 public class PictureTaker {
 
     private static final int REQUEST_IMAGE_CAPTURE = 1;
+    private static final int targetImageSize = 1024;
     private final Activity activity;
     private final PictureTakerCallback callback;
     private Uri imageUri;
@@ -80,7 +79,6 @@ public class PictureTaker {
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == Activity.RESULT_OK) {
             Log.d("PictureTaker", "Image captured and saved to: " + imageUri.toString());
 
-            int targetSize = 512;
             ImageDecoder.Source source = ImageDecoder.createSource(activity.getContentResolver(), imageUri);
             try {
                 // ImageUtils.resizeImage isn't working with the Uri created from taking a picture
@@ -90,11 +88,11 @@ public class PictureTaker {
                 int originalHeight = originalBitmap.getHeight();
                 float aspectRatio = (float) originalWidth / (float) originalHeight;
                 // Set the target dimensions while maintaining the original aspect ratio.
-                int targetWidth = targetSize;
+                int targetWidth = targetImageSize;
                 int targetHeight = Math.round(targetWidth / aspectRatio);
 
                 if (targetHeight > targetWidth) {
-                    targetHeight = targetSize;
+                    targetHeight = targetImageSize;
                     targetWidth = Math.round(targetHeight * aspectRatio);
                 }
 
