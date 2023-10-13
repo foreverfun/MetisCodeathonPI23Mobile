@@ -249,4 +249,24 @@ public class MainActivity extends AppCompatActivity implements LocationUpdateLis
         restClient.makePostRequest(apiUrl, jsonBody, callback);
     }
 
+    @SuppressLint("SetTextI18n")
+    private void MakeGetEndpointRequest() {
+        restClient.makeGetRequest(apiUrl, new Callback() {
+            @Override
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
+
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    String responseBody = response.body().string();
+                    runOnUiThread(() -> tvLocation.setText(responseBody));
+                    // Process the response data
+                } else {
+                    // Handle the unsuccessful response
+                }
+            }
+        });
+    }
 }
