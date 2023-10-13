@@ -9,6 +9,8 @@ import android.graphics.ImageDecoder;
 import android.location.Location;
 import android.os.Bundle;
 import android.util.Base64;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -29,6 +31,7 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 
 import android.location.Location;
@@ -70,6 +73,10 @@ public class MainActivity extends AppCompatActivity implements LocationUpdateLis
 
 
     private GoogleMap myMap;
+
+    String apiUrl = "https://hezidt069i.execute-api.us-east-2.amazonaws.com/Develop/walked-paths";
+
+    private RestClient restClient = new RestClient();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -196,6 +203,7 @@ public class MainActivity extends AppCompatActivity implements LocationUpdateLis
             btnStart.setText("Start");
             tracker.stop();
             compass.stop();
+            MakePostEndpointRequest();
         } else {
             myMap.clear();
             polyline = null;
@@ -237,4 +245,47 @@ public class MainActivity extends AppCompatActivity implements LocationUpdateLis
         }
         return false;
     }
+
+    @SuppressLint("SetTextI18n")
+    private void MakePostEndpointRequest()
+    {
+        Gson gson = new Gson();
+        JsonObject jsonObject = new JsonObject();
+        jsonObject.addProperty("body", gson.toJson(trackedPath));
+        String jsonBody = gson.toJson(jsonObject);
+        Callback callback = new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                    @Override
+                    public void run() {
+                        tvLocation.setText("Request failed: " + e.getMessage());
+                    }
+                });
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    final String responseBody = response.body().string();
+                    new Handler(Looper.getMainLooper()).post(new Runnable() {
+                        @Override
+                        public void run() {
+                            tvLocation.setText(responseBody);
+                        }
+                    });
+                } else {
+                    new Handler(Looper.getMainLooper()).post(new Runnable() {
+                        @Override
+                        public void run() {
+                            tvLocation.setText("Unsuccessful response: " + response.code());
+                        }
+                    });
+                }
+            }
+        };
+
+        restClient.makePostRequest(apiUrl, jsonBody, callback);
+    }
+
 }
