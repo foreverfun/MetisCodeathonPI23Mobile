@@ -36,7 +36,7 @@ public class RestClient {
         });
     }
 
-    public Response makePostRequest(String url, String jsonBody) throws IOException {
+    public void makePostRequest(String url, String jsonBody, final Callback callback) {
         RequestBody requestBody = RequestBody.create(jsonBody, JSON);
 
         Request request = new Request.Builder()
@@ -46,35 +46,10 @@ public class RestClient {
                 .build();
 
         Call call = client.newCall(request);
+        call.enqueue(callback);
 
-        try {
-            Response response = call.execute();
-            return response;
-        } catch (IOException e) {
-            e.printStackTrace();
-            // Handle the exception
-            return null; // or throw a custom exception
-        }
     }
 }
-//How to use RestClient
-//    String apiUrl = "https://hezidt069i.execute-api.us-east-2.amazonaws.com/Develop/walked-paths";
-//    restClient.makeGetRequest(apiUrl, new Callback() {
-//        @Override
-//        public void onFailure(Call call, IOException e) {
-//            // Handle the failure
-//        }
-//
-//        @Override
-//        public void onResponse(Call call, Response response) throws IOException {
-//            if (response.isSuccessful()) {
-//                String responseBody = response.body().string();
-//                // Process the response data
-//            } else {
-//                // Handle the unsuccessful response
-//            }
-//        }
-//    });
 
 //Serailize and Deserialize
 // GET
