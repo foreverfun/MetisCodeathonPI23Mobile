@@ -7,6 +7,7 @@ import android.graphics.ImageDecoder;
 import android.location.Location;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
@@ -77,8 +78,17 @@ public class MainActivity extends AppCompatActivity implements LocationUpdateLis
         tvLocation = findViewById(R.id.tvLocation);
 
         btnStart.setOnClickListener(view -> handleStartClick());
-
         btnTakePicture.setOnClickListener(view -> handleTakePictureClick());
+
+        //Testing
+        Button testingBtn = findViewById(R.id.btnTesting);
+        testingBtn.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this, TestingActivity.class);
+                startActivity(intent);
+            }
+        });
         
         // setup the GoogleMap
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
@@ -187,77 +197,5 @@ public class MainActivity extends AppCompatActivity implements LocationUpdateLis
     @SuppressLint("SetTextI18n")
     private void handleTakePictureClick() {
         pictureTaker.takePicture();
-    }
-
-    private void postEndpoint(String url, TrackedPath trackedPath)
-    {
-        Gson gson = new Gson();
-        String trackedPathString = gson.toJson(trackedPath);
-        new Thread(new Runnable() {
-
-            @Override
-            public void run() {
-                RequestBody postBody = new FormBody.Builder()
-                        .add("TrackedPathString", trackedPathString)
-                        .build();
-                Request request = new Request.Builder()
-                        .url(url)
-                        .post(postBody)
-                        .build();
-                OkHttpClient client = new OkHttpClient();
-                Call call = client.newCall(request);
-
-                Response response = null;
-                try {
-                    response = call.execute();
-                    String serverResponse = response.body().string();
-                    runOnUiThread(new Runnable() {
-
-                        @Override
-                        public void run() {
-                            //display to serverResponse to UI
-                        }
-                    });
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-
-            }
-        }).start();
-    }
-
-    private void getEndpoint(String url)
-    {
-        //get
-        OkHttpClient client = new OkHttpClient();
-        Request request = new Request.Builder()
-                .url(url)
-                .build();
-        client.newCall(request).enqueue(new Callback() {
-
-            @Override
-            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
-                if (response.isSuccessful())
-                {
-                    String responseString = response.body().string();
-                    Gson gson = new Gson();
-                    Type listType = new TypeToken<ArrayList<TrackedPath>>(){}.getType();
-                    ArrayList<TrackedPath> trackedPaths = gson.fromJson(responseString, listType);
-                    runOnUiThread(new Runnable() {
-
-                        @Override
-                        public void run() {
-                            //display trackedPath to UI component
-                        }
-                    });
-                }
-            }
-
-            @Override
-            public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                e.printStackTrace();
-            }
-        });
-
     }
 }
