@@ -136,7 +136,10 @@ public class MainActivity extends AppCompatActivity implements LocationUpdateLis
 
     private void AddTrackedPoint(TrackedPoint trackedPoint)
     {
-        String text = "(" + trackedPoint.longitude + ", " + trackedPoint.latitude + ") " + compass.azimuth + " : " + compass.direction;
+        String lonString = String.format("%.5f", trackedPoint.longitude);
+        String latString = String.format("%.5f", trackedPoint.latitude);
+        String azString = String.format("%.1f", compass.azimuth);
+        String text = compass.direction + " - " + azString + "(" + lonString + ", " + latString + ") ";
         trackedPoint.index = trackedPath.locationList.size();
         trackedPath.locationList.add(trackedPoint);
         tvLocation.setText(text);
