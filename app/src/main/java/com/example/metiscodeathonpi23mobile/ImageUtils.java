@@ -2,17 +2,18 @@ package com.example.metiscodeathonpi23mobile;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.util.Base64;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 
 public class ImageUtils {
-    public static Bitmap resizeImage(File imageFile, int targetWidth, int targetHeight) {
+    public static Bitmap resizeImage(Uri imageUri, int targetWidth, int targetHeight) {
         try {
             BitmapFactory.Options options = new BitmapFactory.Options();
             options.inJustDecodeBounds = true;
-            BitmapFactory.decodeFile(imageFile.getAbsolutePath(), options);
+            BitmapFactory.decodeFile(imageUri.toString(), options);
 
             int imageWidth = options.outWidth;
             int imageHeight = options.outHeight;
@@ -22,7 +23,7 @@ public class ImageUtils {
             options.inJustDecodeBounds = false;
             options.inSampleSize = scaleFactor;
 
-            return BitmapFactory.decodeFile(imageFile.getAbsolutePath(), options);
+            return BitmapFactory.decodeFile(imageUri.toString(), options);
         } catch (Exception e) {
             e.printStackTrace();
             return null;

@@ -2,6 +2,8 @@ package com.example.metiscodeathonpi23mobile;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.ImageDecoder;
 import android.location.Location;
 import android.os.Bundle;
 import android.util.Log;
@@ -67,6 +69,8 @@ public class MainActivity extends AppCompatActivity implements LocationUpdateLis
         compass = new Compass(this);
         pictureTaker = new PictureTaker(this, this);
 
+        trackedPath = new TrackedPath();
+
         setContentView(R.layout.activity_main);
         btnStart = findViewById(R.id.btnStart);
         btnTakePicture = findViewById(R.id.btnTakePicture);
@@ -102,14 +106,8 @@ public class MainActivity extends AppCompatActivity implements LocationUpdateLis
         pictureTaker.onActivityResult(requestCode, resultCode, data);
     }
 
-    public void onLocationUpdate(Location location) {
-        TrackedPoint trackedPoint = new TrackedPoint();
-
-        trackedPoint.longitude = location.getLongitude() + offsetLon;
-        trackedPoint.latitude = location.getLatitude() + offsetLat;
-        trackedPoint.azimuth = compass.azimuth;
-        trackedPoint.direction = compass.direction;
-
+    private void AddTrackedPoint(TrackedPoint trackedPoint)
+    {
         String text = "(" + trackedPoint.longitude + ", " + trackedPoint.latitude + ") " + compass.azimuth + " : " + compass.direction;
         trackedPath.locationList.add(trackedPoint);
         tvLocation.setText(text);
@@ -137,8 +135,34 @@ public class MainActivity extends AppCompatActivity implements LocationUpdateLis
         myMap.moveCamera(CameraUpdateFactory.newLatLngZoom(current, 20));
     }
 
-    public void onPictureTaken(String imageUri) {
-        Log.d("MainActivity", "onPictureTaken - Image captured and saved to: " + imageUri);
+    public void onLocationUpdate(Location location) {
+        TrackedPoint trackedPoint = new TrackedPoint();
+
+        trackedPoint.longitude = location.getLongitude() + offsetLon;
+        trackedPoint.latitude = location.getLatitude() + offsetLat;
+        trackedPoint.azimuth = compass.azimuth;
+        trackedPoint.direction = compass.direction;
+
+        AddTrackedPoint(trackedPoint);
+    }
+
+    public void onPictureTaken(String base64image) {
+
+        TrackedPoint trackedPoint = new TrackedPoint();
+
+        Location location = tracker.getLocation();
+
+        trackedPoint.longitude = location.getLongitude() + offsetLon;
+        trackedPoint.latitude = location.getLatitude() + offsetLat;
+        trackedPoint.azimuth = compass.azimuth;
+        trackedPoint.direction = compass.direction;
+        trackedPoint.base64Image = base64image;
+
+        Gson gson = new Gson();
+        String trackedPointString = gson.toJson(trackedPoint);
+        Log.d("MainActivity", "onPictureTaken - trackedPoint: " + trackedPointString);
+
+        AddTrackedPoint(trackedPoint);
     }
 
     @SuppressLint("SetTextI18n")

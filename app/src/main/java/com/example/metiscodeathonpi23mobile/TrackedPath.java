@@ -5,7 +5,7 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 
 public class TrackedPath {
-    public ArrayList<TrackedPoint> locationList = new ArrayList<TrackedPoint>();
+    public ArrayList<TrackedPoint> locationList = new ArrayList<>();
     public LocalDate localDate = LocalDate.now(); // Create a date object
     public LocalTime localTime = LocalTime.now();
 }

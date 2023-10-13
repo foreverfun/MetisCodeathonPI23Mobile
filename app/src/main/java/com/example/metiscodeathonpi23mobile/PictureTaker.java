@@ -4,6 +4,8 @@ import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.ImageDecoder;
 import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
@@ -13,6 +15,8 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import android.Manifest;
+
+import java.io.IOException;
 
 public class PictureTaker {
 
@@ -75,7 +79,33 @@ public class PictureTaker {
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == Activity.RESULT_OK) {
             Log.d("PictureTaker", "Image captured and saved to: " + imageUri.toString());
-            callback.onPictureTaken(imageUri.toString());
+
+            int targetSize = 512;
+            ImageDecoder.Source source = ImageDecoder.createSource(activity.getContentResolver(), imageUri);
+            try {
+                // ImageUtils.resizeImage isn't working with the Uri created from taking a picture
+                // so do it this way
+                Bitmap originalBitmap = ImageDecoder.decodeBitmap(source);
+                int originalWidth = originalBitmap.getWidth();
+                int originalHeight = originalBitmap.getHeight();
+                float aspectRatio = (float) originalWidth / (float) originalHeight;
+                // Set the target dimensions while maintaining the original aspect ratio.
+                int targetWidth = targetSize;
+                int targetHeight = Math.round(targetWidth / aspectRatio);
+
+                if (targetHeight > targetWidth) {
+                    targetHeight = targetSize;
+                    targetWidth = Math.round(targetHeight * aspectRatio);
+                }
+
+                Bitmap resizedBitmap = Bitmap.createScaledBitmap(originalBitmap, targetWidth, targetHeight, false);
+                String base64image = ImageUtils.bitmapToBase64(resizedBitmap);
+                callback.onPictureTaken(base64image);
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+            }
+
         } else {
             Log.d("PictureTaker", "Image capture failed or cancelled");
             // Delete the empty image file if the user cancelled the camera activity.

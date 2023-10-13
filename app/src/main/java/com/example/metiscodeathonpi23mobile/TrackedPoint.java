@@ -5,4 +5,5 @@ public class TrackedPoint {
     public double longitude;
     public double azimuth;
     public String direction;
+    public String base64Image;
 }
